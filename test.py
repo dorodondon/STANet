@@ -6,7 +6,7 @@ from util.util import mkdir
 import argparse
 from PIL import Image
 import torchvision.transforms as transforms
-
+import os
 
 def transform():
     transform_list = []
@@ -16,30 +16,36 @@ def transform():
 
 
 def val(opt):
-    image_1_path = opt.image1_path
-    image_2_path = opt.image2_path
-    A_img = Image.open(image_1_path).convert('RGB')
-    B_img = Image.open(image_2_path).convert('RGB')
-    trans = transform()
-    A = trans(A_img).unsqueeze(0)
-    B = trans(B_img).unsqueeze(0)
-    # dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
-    model = create_model(opt)      # create a model given opt.model and other options
-    model.setup(opt)               # regular setup: load and print networks; create schedulers
-    save_path = opt.results_dir
-    mkdir(save_path)
-    model.eval()
-    data = {}
-    data['A']= A
-    data['B'] = B
-    data['A_paths'] = [image_1_path]
+    dir_path = opt.image1_path
+    dir_path_2=opt.image2_path
+    for (root, directories, files) in os.walk(dir_path):
+        for file in files:
+          file_path = os.path.join(file)
+          image_1_path = os.path.join(root, file_path)
+          image_2_path = os.path.join(dir_path_2, file_path)
+         
+          A_img = Image.open(image_1_path).convert('RGB')
+          B_img = Image.open(image_2_path).convert('RGB')
+          trans = transform()
+          A = trans(A_img).unsqueeze(0)
+          B = trans(B_img).unsqueeze(0)
+          # dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
+          model = create_model(opt)      # create a model given opt.model and other options
+          model.setup(opt)               # regular setup: load and print networks; create schedulers
+          save_path = opt.results_dir
+          mkdir(save_path)
+          model.eval()
+          data = {}
+          data['A']= A
+          data['B'] = B
+          data['A_paths'] = [image_1_path]
 
-    model.set_input(data)  # unpack data from data loader
-    pred = model.test(val=False)           # run inference return pred
+          model.set_input(data)  # unpack data from data loader
+          pred = model.test(val=False)           # run inference return pred
 
-    img_path = [image_1_path]    # get image paths
+          img_path = [image_1_path]    # get image paths
 
-    save_images(pred, save_path, img_path)
+          save_images(pred, save_path, img_path)
 
 
 
